@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 )
 
 // 预编译正则表达式
@@ -16,7 +17,8 @@ var (
 	patternLinux          = regexp.MustCompile(`(?i)Linux`)
 	patternAndroid        = regexp.MustCompile(`(?i)Android`)
 	patternIphone         = regexp.MustCompile(`(?i)iPhone`)
-	patternWindowsVersion = regexp.MustCompile(`(?i)Windows([a-zA-Z0-9.]+)`)
+	patternWindowsVersion = regexp.MustCompile(`(?i)Windows NT ([a-zA-Z0-9.]+)`)
+	patternMacVersion     = regexp.MustCompile(`(?i)Mac OS X ([0-9_]+)`)
 )
 
 // 解析 PC/Mobile/Wechat
@@ -27,13 +29,22 @@ func parseMobile(userAgent []byte) (bool, bool, bool) {
 }
 
 // 解析平台类型
-func parsePlatform(userAgent []byte) string {
+func parsePlatform(userAgent []byte) (string, string) {
 	var platform string
+	var platformVersion string
 	switch true {
 	case patternMac.Match(userAgent):
 		platform = "Mac"
+		match := patternMacVersion.FindSubmatch(userAgent)
+		if len(match) == 2 {
+			platformVersion = strings.Replace(string(match[0]), "_", ".", -1)
+		}
 	case patternWindows.Match(userAgent):
 		platform = "Windows"
+		match := patternWindowsVersion.FindSubmatch(userAgent)
+		if len(match) == 2 {
+			platformVersion = string(match[0])
+		}
 	case patternAndroid.Match(userAgent):
 		platform = "Android"
 	case patternIphone.Match(userAgent):
@@ -43,7 +54,7 @@ func parsePlatform(userAgent []byte) string {
 	default:
 		platform = "other"
 	}
-	return platform
+	return platform, platformVersion
 }
 
 func booToString(boolValue bool) string {
@@ -62,10 +73,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	debug := r.URL.Query().Get("debug")
 
 	var isPc, isMobile, isWechat = parseMobile(userAgent)
-	var platform = parsePlatform(userAgent)
+	var platform, platformVersion = parsePlatform(userAgent)
 
 	println(host, userAgent)
-	println(isPc, isMobile, isWechat, platform)
+	println(isPc, isMobile, isWechat, platform, platformVersion)
 
 	switch debug {
 	case "mobile":
