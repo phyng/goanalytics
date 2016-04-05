@@ -11,9 +11,9 @@ import (
 
 // ViewLog
 type ViewLog struct {
+	url             string
 	domain          string
 	userAgent       string
-	url             string
 	browser         string
 	browserVersion  string
 	platform        string
@@ -154,11 +154,25 @@ func parsePlatform(userAgent []byte) (string, string) {
 	return platform, platformVersion
 }
 
+// parseIP
+func parseIP(r http.Request) string {
+	XForwardedFor := r.Header.Get("X-Forwarded-For")
+	return XForwardedFor
+}
+
 func boolToString(boolValue bool) string {
 	if boolValue {
 		return "true"
 	}
 	return "false"
+}
+
+func getAbsURI(r *http.Request) string {
+	scheme := "http"
+	if r.URL.Scheme != "" {
+		scheme = r.URL.Scheme
+	}
+	return scheme + "://" + r.Host + r.RequestURI
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
@@ -172,6 +186,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	debug := query.Get("debug")
 
 	viewlog := ViewLog{}
+	viewlog.url = getAbsURI(r)
 	viewlog.referer = query.Get("referer")
 	viewlog.cookieid = query.Get("cookieid")
 	viewlog.width = query.Get("width")
