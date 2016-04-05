@@ -37,8 +37,11 @@ func main() {
 	testUserAgent("MicroMessenger", "wechat", "true")
 	testUserAgent("Line", "wechat", "false")
 
-	testUserAgent("Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko", "platform", "Windows")
-	testUserAgent("Mozilla/5.0 (Linux; U; Android 4.0.1; ja-jp; Galaxy Nexus……", "platform", "Android")
-	testUserAgent("Mozilla/5.0 (X11; Linux x86_64) ...", "platform", "Linux")
-	testUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) ...", "platform", "Mac")
+	testUserAgent("Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0; Xbox; Xbox One)", "platform", "Windows")
+	testUserAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko", "platform", "Windows")
+	testUserAgent("Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19", "platform", "Android")
+	testUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2693.2 Safari/537.36", "platform", "Linux")
+	testUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36", "platform", "Mac")
+	testUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1", "platform", "iPhone")
+
 }
