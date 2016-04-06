@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	urllib "net/url"
 	"os"
 	"regexp"
 	"strings"
 
+	tldlib "github.com/jpillora/go-tld"
 	"github.com/wangtuanjie/ip17mon"
 )
 
@@ -34,6 +36,8 @@ type ViewLog struct {
 	province        string
 	city            string
 	operators       string
+	source          string
+	sourceKey       string
 }
 
 // 预编译正则表达式
@@ -67,6 +71,22 @@ var windowsVersionMap = map[string]string{
 	"Windows NT 5.2":  "Windows 2003",
 	"Windows NT 5.1":  "Windows XP",
 	"Windows NT 5.0":  "Windows 2000",
+}
+
+var refererMap = map[string]string{
+	"google.com": "google",
+	"bing.com":   "bing",
+	"360.cn":     "360",
+	"so.com":     "360",
+	"haosou.com": "360",
+	"baidu.com":  "baidu",
+	"sogou.com":  "sogou",
+}
+
+var refererFromMap = map[string]string{
+	"timeline":      "timeline",
+	"groupmessage":  "groupmessage",
+	"singlemessage": "singlemessage",
 }
 
 // 解析 PC/Mobile/Wechat
@@ -180,6 +200,28 @@ func parseIP(r *http.Request) string {
 	return strings.Split(r.RemoteAddr, ":")[0]
 }
 
+func parseSource(r *http.Request) (string, string) {
+	var source string
+	var sourceKey string
+	refererURL := r.Header.Get("Referer")
+	rootDomain := getRootDomain(refererURL)
+
+	if value, ok := refererMap[rootDomain]; ok {
+		source = value
+		return source, sourceKey
+	}
+
+	url, err := urllib.Parse(refererURL)
+	if err != nil {
+		return "", ""
+	}
+	queryFrom := url.Query().Get("from")
+	if value, ok := refererFromMap[queryFrom]; ok {
+		source = value
+	}
+	return source, sourceKey
+}
+
 func boolToString(boolValue bool) string {
 	if boolValue {
 		return "true"
@@ -195,8 +237,14 @@ func getAbsURI(r *http.Request) string {
 	return scheme + "://" + r.Host + r.RequestURI
 }
 
+func getRootDomain(url string) string {
+	result, _ := tldlib.Parse(url)
+	return result.Domain + "." + result.TLD
+}
+
 func handle(w http.ResponseWriter, r *http.Request) {
 
+	url := r.Header.Get("Referer")
 	domain := r.Host
 	userAgent := []byte(r.Header.Get("User-Agent"))
 	query := r.URL.Query()
@@ -204,7 +252,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	debug := query.Get("debug")
 
 	viewlog := ViewLog{}
-	viewlog.url = getAbsURI(r)
+	viewlog.url = url
 	viewlog.referer = query.Get("referer")
 	viewlog.cookieid = query.Get("cookieid")
 	viewlog.width = query.Get("width")
@@ -219,6 +267,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog.browser, viewlog.browserVersion = parseBrowser(userAgent)
 	viewlog.ip = parseIP(r)
 	viewlog.country, viewlog.province, viewlog.city, viewlog.operators = parseIPAddress(viewlog.ip)
+	viewlog.source, viewlog.sourceKey = parseSource(r)
 
 	fmt.Println(viewlog)
 
@@ -231,6 +280,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, viewlog.platform)
 	case "ip":
 		io.WriteString(w, viewlog.ip)
+	case "source":
+		io.WriteString(w, viewlog.source)
 	default:
 		io.WriteString(w, "Hello world!")
 	}

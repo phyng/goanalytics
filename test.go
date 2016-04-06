@@ -29,24 +29,31 @@ func testHeader(header map[string]string, debug string, except string) {
 	body, err := ioutil.ReadAll(resp.Body)
 	errorHandle(err)
 	if string(body) != except {
-		log.Fatalln(except)
+		log.Fatalf(`ERR %s: "%s" is not "%s"`, debug, body, except)
 	} else {
 		log.Printf("OK %s %s", debug, except)
 	}
 }
 
 func testUserAgent(UserAgent string, debug string, except string) {
-	herder := map[string]string{
+	header := map[string]string{
 		"User-Agent": UserAgent,
 	}
-	testHeader(herder, debug, except)
+	testHeader(header, debug, except)
 }
 
 func testXForwardedFor(XForwardedFor string, debug string, except string) {
-	herder := map[string]string{
+	header := map[string]string{
 		"X-Forwarded-For": XForwardedFor,
 	}
-	testHeader(herder, debug, except)
+	testHeader(header, debug, except)
+}
+
+func testSource(referer string, debug string, except string) {
+	header := map[string]string{
+		"Referer": referer,
+	}
+	testHeader(header, debug, except)
 }
 
 func main() {
@@ -65,4 +72,6 @@ func main() {
 	testXForwardedFor("", "ip", "127.0.0.1")
 	testXForwardedFor("8.8.8.8", "ip", "8.8.8.8")
 	testXForwardedFor("8.8.8.8, 114.114.114.114", "ip", "114.114.114.114")
+
+	testSource("https://www.google.com", "source", "google")
 }
