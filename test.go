@@ -13,11 +13,16 @@ func errorHandle(err error) {
 	}
 }
 
-func testHeader(headerKey string, headerValue string, debug string, except string) {
+func testHeader(header map[string]string, debug string, except string) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "http://localhost:"+os.Args[1]+"/?debug="+debug, nil)
 	errorHandle(err)
-	req.Header.Set(headerKey, headerValue)
+
+	req.Header.Set("Referer", "http://www.example.com")
+	for key, value := range header {
+		req.Header.Set(key, value)
+	}
+
 	resp, err := client.Do(req)
 	errorHandle(err)
 	defer resp.Body.Close()
@@ -26,22 +31,27 @@ func testHeader(headerKey string, headerValue string, debug string, except strin
 	if string(body) != except {
 		log.Fatalln(except)
 	} else {
-		log.Printf("OK %s %s %s %s", debug, except, headerKey, headerValue)
+		log.Printf("OK %s %s", debug, except)
 	}
 }
 
 func testUserAgent(UserAgent string, debug string, except string) {
-	testHeader("User-Agent", UserAgent, debug, except)
+	herder := map[string]string{
+		"User-Agent": UserAgent,
+	}
+	testHeader(herder, debug, except)
 }
 
 func testXForwardedFor(XForwardedFor string, debug string, except string) {
-	testHeader("X-Forwarded-For", XForwardedFor, debug, except)
+	herder := map[string]string{
+		"X-Forwarded-For": XForwardedFor,
+	}
+	testHeader(herder, debug, except)
 }
 
 func main() {
 	testUserAgent("mobile", "mobile", "true")
 	testUserAgent("desktop", "mobile", "false")
-
 	testUserAgent("MicroMessenger", "wechat", "true")
 	testUserAgent("Line", "wechat", "false")
 
