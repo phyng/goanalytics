@@ -176,11 +176,9 @@ func getAbsURI(r *http.Request) string {
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
-	var (
-		domain    = r.Host
-		userAgent = []byte(r.Header.Get("User-Agent"))
-	)
 
+	domain := r.Host
+	userAgent := []byte(r.Header.Get("User-Agent"))
 	query := r.URL.Query()
 	header := r.Header
 	debug := query.Get("debug")
