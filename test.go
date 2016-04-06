@@ -13,11 +13,11 @@ func errorHandle(err error) {
 	}
 }
 
-func testUserAgent(UserAgent string, debug string, except string) {
+func testHeader(headerKey string, headerValue string, debug string, except string) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "http://localhost:"+os.Args[1]+"/?debug="+debug, nil)
 	errorHandle(err)
-	req.Header.Set("User-Agent", UserAgent)
+	req.Header.Set(headerKey, headerValue)
 	resp, err := client.Do(req)
 	errorHandle(err)
 	defer resp.Body.Close()
@@ -26,8 +26,16 @@ func testUserAgent(UserAgent string, debug string, except string) {
 	if string(body) != except {
 		log.Fatalln(except)
 	} else {
-		log.Printf("OK %s %s %s", debug, except, UserAgent)
+		log.Printf("OK %s %s %s %s", debug, except, headerKey, headerValue)
 	}
+}
+
+func testUserAgent(UserAgent string, debug string, except string) {
+	testHeader("User-Agent", UserAgent, debug, except)
+}
+
+func testXForwardedFor(XForwardedFor string, debug string, except string) {
+	testHeader("X-Forwarded-For", XForwardedFor, debug, except)
 }
 
 func main() {
@@ -44,4 +52,7 @@ func main() {
 	testUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36", "platform", "Mac")
 	testUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1", "platform", "iPhone")
 
+	testXForwardedFor("", "ip", "127.0.0.1")
+	testXForwardedFor("8.8.8.8", "ip", "8.8.8.8")
+	testXForwardedFor("8.8.8.8, 114.114.114.114", "ip", "114.114.114.114")
 }

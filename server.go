@@ -7,6 +7,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/wangtuanjie/ip17mon"
 )
 
 // ViewLog
@@ -27,6 +29,11 @@ type ViewLog struct {
 	color           string
 	language        string
 	title           string
+	ip              string
+	country         string
+	province        string
+	city            string
+	operators       string
 }
 
 // 预编译正则表达式
@@ -48,6 +55,7 @@ var (
 	patternBrowserFirefox = regexp.MustCompile(`(?i)firefox\/([\d]+)`)
 	patternBrowserIOS     = regexp.MustCompile(`(?i)iphone os ([\d]+)`)
 	patternBrowserAndroid = regexp.MustCompile(`(?i)android (\d\.\d)`)
+	patternIPv4           = regexp.MustCompile(`\d+[.]\d+[.]\d+[.]\d+`)
 )
 
 var windowsVersionMap = map[string]string{
@@ -154,10 +162,22 @@ func parsePlatform(userAgent []byte) (string, string) {
 	return platform, platformVersion
 }
 
+func parseIPAddress(IP string) (string, string, string, string) {
+	loc, err := ip17mon.Find(IP)
+	if err == nil {
+		return loc.Country, loc.Region, loc.City, loc.Isp
+	}
+	return "", "", "", ""
+}
+
 // parseIP
-func parseIP(r http.Request) string {
+func parseIP(r *http.Request) string {
 	XForwardedFor := r.Header.Get("X-Forwarded-For")
-	return XForwardedFor
+	IP := patternIPv4.FindAllString(XForwardedFor, -1)
+	if len(IP) > 0 {
+		return IP[len(IP)-1]
+	}
+	return strings.Split(r.RemoteAddr, ":")[0]
 }
 
 func boolToString(boolValue bool) string {
@@ -197,6 +217,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog.isMobile, viewlog.isWechat = parseMobile(userAgent)
 	viewlog.platform, viewlog.platformVersion = parsePlatform(userAgent)
 	viewlog.browser, viewlog.browserVersion = parseBrowser(userAgent)
+	viewlog.ip = parseIP(r)
+	viewlog.country, viewlog.province, viewlog.city, viewlog.operators = parseIPAddress(viewlog.ip)
 
 	fmt.Println(viewlog)
 
@@ -207,10 +229,18 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, boolToString(viewlog.isWechat))
 	case "platform":
 		io.WriteString(w, viewlog.platform)
+	case "ip":
+		io.WriteString(w, viewlog.ip)
 	default:
 		io.WriteString(w, "Hello world!")
 	}
 
+}
+
+func init() {
+	if err := ip17mon.Init("17monipdb.dat"); err != nil {
+		panic(err)
+	}
 }
 
 func main() {
