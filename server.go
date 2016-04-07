@@ -13,7 +13,7 @@ import (
 	"github.com/wangtuanjie/ip17mon"
 )
 
-// ViewLog
+// ViewLog core data structure
 type ViewLog struct {
 	url             string
 	domain          string
@@ -183,9 +183,24 @@ func parsePlatform(userAgent []byte) (string, string) {
 }
 
 func parseIPAddress(IP string) (string, string, string, string) {
+	var Country, Region, City, Isp string
 	loc, err := ip17mon.Find(IP)
 	if err == nil {
-		return loc.Country, loc.Region, loc.City, loc.Isp
+		Country, Region, City, Isp = loc.Country, loc.Region, loc.City, loc.Isp
+		const NULL = "N/A"
+		if Country == NULL {
+			Country = ""
+		}
+		if Region == NULL {
+			Region = ""
+		}
+		if City == NULL {
+			City = ""
+		}
+		if Isp == NULL {
+			Isp = ""
+		}
+		return Country, Region, City, Isp
 	}
 	return "", "", "", ""
 }
@@ -203,23 +218,26 @@ func parseIP(r *http.Request) string {
 func parseSource(r *http.Request) (string, string) {
 	var source string
 	var sourceKey string
-	refererURL := r.Header.Get("Referer")
+	refererURL := r.URL.Query().Get("referer")
+	url, err := urllib.Parse(refererURL)
+	if err != nil {
+		return "", ""
+	}
 	rootDomain := getRootDomain(refererURL)
 
+	// 搜索引擎
 	if value, ok := refererMap[rootDomain]; ok {
 		source = value
 		return source, sourceKey
 	}
 
-	url, err := urllib.Parse(refererURL)
-	if err != nil {
-		return "", ""
-	}
+	// 微信相关
 	queryFrom := url.Query().Get("from")
 	if value, ok := refererFromMap[queryFrom]; ok {
 		source = value
 	}
 	return source, sourceKey
+
 }
 
 func boolToString(boolValue bool) string {

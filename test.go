@@ -13,9 +13,9 @@ func errorHandle(err error) {
 	}
 }
 
-func testHeader(header map[string]string, debug string, except string) {
+func testHeader(header map[string]string, url string, debug string, except string) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://localhost:"+os.Args[1]+"/?debug="+debug, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	errorHandle(err)
 
 	req.Header.Set("Referer", "http://www.example.com")
@@ -39,21 +39,22 @@ func testUserAgent(UserAgent string, debug string, except string) {
 	header := map[string]string{
 		"User-Agent": UserAgent,
 	}
-	testHeader(header, debug, except)
+	url := "http://localhost:" + os.Args[1] + "/?debug=" + debug
+	testHeader(header, url, debug, except)
 }
 
 func testXForwardedFor(XForwardedFor string, debug string, except string) {
 	header := map[string]string{
 		"X-Forwarded-For": XForwardedFor,
 	}
-	testHeader(header, debug, except)
+	url := "http://localhost:" + os.Args[1] + "/?debug=" + debug
+	testHeader(header, url, debug, except)
 }
 
 func testSource(referer string, debug string, except string) {
-	header := map[string]string{
-		"Referer": referer,
-	}
-	testHeader(header, debug, except)
+	header := map[string]string{}
+	url := "http://localhost:" + os.Args[1] + "/?referer=" + referer + "&debug=" + debug
+	testHeader(header, url, debug, except)
 }
 
 func main() {
@@ -74,4 +75,7 @@ func main() {
 	testXForwardedFor("8.8.8.8, 114.114.114.114", "ip", "114.114.114.114")
 
 	testSource("https://www.google.com", "source", "google")
+	testSource("https://www.baidu.com", "source", "baidu")
+	testSource("https://www.bing.com", "source", "bing")
+	testSource("https://www.sogou.com", "source", "sogou")
 }
