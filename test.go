@@ -52,7 +52,10 @@ func testXForwardedFor(XForwardedFor string, debug string, except string) {
 }
 
 func testSource(referer string, debug string, except string) {
-	header := map[string]string{}
+	header := map[string]string{
+		"Host":    "www.localhost.com",
+		"Referer": "http://www.localhost.com",
+	}
 	url := "http://localhost:" + os.Args[1] + "/?referer=" + referer + "&debug=" + debug
 	testHeader(header, url, debug, except)
 }
@@ -78,4 +81,6 @@ func main() {
 	testSource("https://www.baidu.com", "source", "baidu")
 	testSource("https://www.bing.com", "source", "bing")
 	testSource("https://www.sogou.com", "source", "sogou")
+	testSource("http://www.localhost.com", "source", "inner")
+	testSource("http://www.other.com", "source", "referral")
 }

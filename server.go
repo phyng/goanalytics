@@ -215,29 +215,41 @@ func parseIP(r *http.Request) string {
 	return strings.Split(r.RemoteAddr, ":")[0]
 }
 
-func parseSource(r *http.Request) (string, string) {
+func parseSource(url string, referer string) (string, string) {
 	var source string
 	var sourceKey string
-	refererURL := r.URL.Query().Get("referer")
-	url, err := urllib.Parse(refererURL)
+	refererURL, err := urllib.Parse(referer)
 	if err != nil {
 		return "", ""
 	}
-	rootDomain := getRootDomain(refererURL)
+	urlRootDomain := getRootDomain(url)
+	refererURLRootDomain := getRootDomain(referer)
+	if refererURLRootDomain != "" {
+		sourceKey = "referral-" + refererURLRootDomain
+	}
+
+	// 站内点击
+	if urlRootDomain == refererURLRootDomain {
+		source = "inner"
+	}
 
 	// 搜索引擎
-	if value, ok := refererMap[rootDomain]; ok {
+	if value, ok := refererMap[refererURLRootDomain]; ok {
 		source = value
-		return source, sourceKey
 	}
 
 	// 微信相关
-	queryFrom := url.Query().Get("from")
+	queryFrom := refererURL.Query().Get("from")
 	if value, ok := refererFromMap[queryFrom]; ok {
 		source = value
 	}
-	return source, sourceKey
 
+	// 外站引流
+	if refererURLRootDomain != "" && source == "" {
+		source = "referral"
+	}
+
+	return source, sourceKey
 }
 
 func boolToString(boolValue bool) string {
@@ -285,7 +297,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog.browser, viewlog.browserVersion = parseBrowser(userAgent)
 	viewlog.ip = parseIP(r)
 	viewlog.country, viewlog.province, viewlog.city, viewlog.operators = parseIPAddress(viewlog.ip)
-	viewlog.source, viewlog.sourceKey = parseSource(r)
+	viewlog.source, viewlog.sourceKey = parseSource(viewlog.url, viewlog.referer)
 
 	fmt.Println(viewlog)
 
