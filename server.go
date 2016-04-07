@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,13 +16,13 @@ import (
 
 // ViewLog core data structure
 type ViewLog struct {
-	url             string
-	domain          string
-	userAgent       string
-	browser         string
-	browserVersion  string
-	platform        string
-	platformVersion string
+	URL             string `json:"url"`
+	Domain          string `json:"domain"`
+	UserAgent       string `json:"useragent"`
+	Browser         string `json:"browser"`
+	BrowserVersion  string `json:"browser_version"`
+	Platform        string `json:"platform"`
+	PlatformVersion string `json:"platform_version"`
 	isMobile        bool
 	isWechat        bool
 	referer         string
@@ -282,7 +283,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	debug := query.Get("debug")
 
 	viewlog := ViewLog{}
-	viewlog.url = url
+	viewlog.URL = url
+	viewlog.Domain = domain
 	viewlog.referer = query.Get("referer")
 	viewlog.cookieid = query.Get("cookieid")
 	viewlog.width = query.Get("width")
@@ -290,16 +292,16 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog.color = query.Get("color")
 	viewlog.language = query.Get("language")
 	viewlog.title = query.Get("title")
-	viewlog.domain = domain
-	viewlog.userAgent = header.Get("User-Agent")
+	viewlog.UserAgent = header.Get("User-Agent")
 	viewlog.isMobile, viewlog.isWechat = parseMobile(userAgent)
-	viewlog.platform, viewlog.platformVersion = parsePlatform(userAgent)
-	viewlog.browser, viewlog.browserVersion = parseBrowser(userAgent)
+	viewlog.Platform, viewlog.PlatformVersion = parsePlatform(userAgent)
+	viewlog.Browser, viewlog.BrowserVersion = parseBrowser(userAgent)
 	viewlog.ip = parseIP(r)
 	viewlog.country, viewlog.province, viewlog.city, viewlog.operators = parseIPAddress(viewlog.ip)
-	viewlog.source, viewlog.sourceKey = parseSource(viewlog.url, viewlog.referer)
+	viewlog.source, viewlog.sourceKey = parseSource(viewlog.URL, viewlog.referer)
 
-	fmt.Println(viewlog)
+	jsonBody, _ := json.Marshal(viewlog)
+	fmt.Println(string(jsonBody))
 
 	switch debug {
 	case "mobile":
@@ -307,7 +309,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	case "wechat":
 		io.WriteString(w, boolToString(viewlog.isWechat))
 	case "platform":
-		io.WriteString(w, viewlog.platform)
+		io.WriteString(w, viewlog.Platform)
 	case "ip":
 		io.WriteString(w, viewlog.ip)
 	case "source":
