@@ -23,22 +23,22 @@ type ViewLog struct {
 	BrowserVersion  string `json:"browser_version"`
 	Platform        string `json:"platform"`
 	PlatformVersion string `json:"platform_version"`
-	isMobile        bool
-	isWechat        bool
-	referer         string
-	cookieid        string
-	width           string
-	height          string
-	color           string
-	language        string
-	title           string
-	ip              string
-	country         string
-	province        string
-	city            string
-	operators       string
-	source          string
-	sourceKey       string
+	IsMobile        bool   `json:"is_mobile"`
+	IsWechat        bool   `json:"is_wechat"`
+	Referer         string `json:"referer"`
+	Cookieid        string `json:"cookieid"`
+	Width           string `json:"width"`
+	Height          string `json:"height"`
+	Color           string `json:"color"`
+	Language        string `json:"language"`
+	Title           string `json:"title"`
+	IP              string `json:"ip"`
+	Country         string `json:"country"`
+	Province        string `json:"province"`
+	City            string `json:"city"`
+	Operators       string `json:"operators"`
+	Source          string `json:"source"`
+	SourceKey       string `json:"sourcekey"`
 }
 
 // 预编译正则表达式
@@ -290,35 +290,35 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog := ViewLog{}
 	viewlog.URL = url
 	viewlog.Domain = domain
-	viewlog.referer = query.Get("referer")
-	viewlog.cookieid = query.Get("cookieid")
-	viewlog.width = query.Get("width")
-	viewlog.height = query.Get("height")
-	viewlog.color = query.Get("color")
-	viewlog.language = query.Get("language")
-	viewlog.title = query.Get("title")
+	viewlog.Referer = query.Get("referer")
+	viewlog.Cookieid = query.Get("cookieid")
+	viewlog.Width = query.Get("width")
+	viewlog.Height = query.Get("height")
+	viewlog.Color = query.Get("color")
+	viewlog.Language = query.Get("language")
+	viewlog.Title = query.Get("title")
 	viewlog.UserAgent = header.Get("User-Agent")
-	viewlog.isMobile, viewlog.isWechat = parseMobile(userAgent)
+	viewlog.IsMobile, viewlog.IsWechat = parseMobile(userAgent)
 	viewlog.Platform, viewlog.PlatformVersion = parsePlatform(userAgent)
 	viewlog.Browser, viewlog.BrowserVersion = parseBrowser(userAgent)
-	viewlog.ip = parseIP(r)
-	viewlog.country, viewlog.province, viewlog.city, viewlog.operators = parseIPAddress(viewlog.ip)
-	viewlog.source, viewlog.sourceKey = parseSource(viewlog.URL, viewlog.referer)
+	viewlog.IP = parseIP(r)
+	viewlog.Country, viewlog.Province, viewlog.City, viewlog.Operators = parseIPAddress(viewlog.IP)
+	viewlog.Source, viewlog.SourceKey = parseSource(viewlog.URL, viewlog.Referer)
 
 	jsonBody, _ := json.Marshal(viewlog)
 	fmt.Println(string(jsonBody))
 
 	switch debug {
 	case "mobile":
-		io.WriteString(w, boolToString(viewlog.isMobile))
+		io.WriteString(w, boolToString(viewlog.IsMobile))
 	case "wechat":
-		io.WriteString(w, boolToString(viewlog.isWechat))
+		io.WriteString(w, boolToString(viewlog.IsWechat))
 	case "platform":
 		io.WriteString(w, viewlog.Platform)
 	case "ip":
-		io.WriteString(w, viewlog.ip)
+		io.WriteString(w, viewlog.IP)
 	case "source":
-		io.WriteString(w, viewlog.source)
+		io.WriteString(w, viewlog.Source)
 	default:
 		io.WriteString(w, "Hello world!")
 	}
