@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -320,7 +321,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	case "source":
 		io.WriteString(w, viewlog.Source)
 	default:
-		io.WriteString(w, "Hello world!")
+		gifStr := "R0lGODlhAQABAID/AP///wAAACwAAAAAAQABAAACAkQBADs="
+		gifData, _ := base64.StdEncoding.DecodeString(gifStr)
+		w.Header().Set("Content-Type", "image/gif")
+		w.Write(gifData)
 	}
 
 }
