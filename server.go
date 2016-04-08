@@ -219,6 +219,11 @@ func parseIP(r *http.Request) string {
 func parseSource(url string, referer string) (string, string) {
 	var source string
 	var sourceKey string
+
+	if referer == "" {
+		return "direct", ""
+	}
+
 	refererURL, err := urllib.Parse(referer)
 	if err != nil {
 		return "", ""
