@@ -42,6 +42,11 @@ type ViewLog struct {
 	SourceKey       string `json:"sourcekey"`
 }
 
+const buffLength = 10
+
+// LogChannel log channel
+var LogChannel = make(chan ViewLog, buffLength)
+
 // 预编译正则表达式
 var (
 	patternMobile         = regexp.MustCompile(`(?i)mobile`)
@@ -279,6 +284,22 @@ func getRootDomain(url string) string {
 	return result.Domain + "." + result.TLD
 }
 
+func yield(viewlog ViewLog) {
+	LogChannel <- viewlog
+}
+
+func digest() {
+	length := len(LogChannel)
+	fmt.Println(length)
+	if length == buffLength {
+		for i := 0; i < length; i++ {
+			viewlog := <-LogChannel
+			jsonBody, _ := json.Marshal(viewlog)
+			fmt.Println(string(jsonBody))
+		}
+	}
+}
+
 func handle(w http.ResponseWriter, r *http.Request) {
 
 	url := r.Header.Get("Referer")
@@ -306,8 +327,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog.Country, viewlog.Province, viewlog.City, viewlog.Operators = parseIPAddress(viewlog.IP)
 	viewlog.Source, viewlog.SourceKey = parseSource(viewlog.URL, viewlog.Referer)
 
-	jsonBody, _ := json.Marshal(viewlog)
-	fmt.Println(string(jsonBody))
+	go yield(viewlog)
+	go digest()
 
 	switch debug {
 	case "mobile":
