@@ -46,6 +46,7 @@ const buffLength = 10
 
 // LogChannel log channel
 var LogChannel = make(chan ViewLog, buffLength)
+var gifData, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAID/AP///wAAACwAAAAAAQABAAACAkQBADs=")
 
 // 预编译正则表达式
 var (
@@ -284,7 +285,8 @@ func getRootDomain(url string) string {
 	return result.Domain + "." + result.TLD
 }
 
-func yield(viewlog ViewLog) {
+func yield(r *http.Request) {
+	viewlog := parseRequest(r)
 	LogChannel <- viewlog
 }
 
@@ -300,14 +302,12 @@ func digest() {
 	}
 }
 
-func handle(w http.ResponseWriter, r *http.Request) {
-
+func parseRequest(r *http.Request) ViewLog {
 	url := r.Header.Get("Referer")
 	domain := r.Host
 	userAgent := []byte(r.Header.Get("User-Agent"))
 	query := r.URL.Query()
 	header := r.Header
-	debug := query.Get("debug")
 
 	viewlog := ViewLog{}
 	viewlog.URL = url
@@ -327,27 +327,33 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	viewlog.Country, viewlog.Province, viewlog.City, viewlog.Operators = parseIPAddress(viewlog.IP)
 	viewlog.Source, viewlog.SourceKey = parseSource(viewlog.URL, viewlog.Referer)
 
-	go yield(viewlog)
-	go digest()
+	return viewlog
+}
 
-	switch debug {
-	case "mobile":
-		io.WriteString(w, boolToString(viewlog.IsMobile))
-	case "wechat":
-		io.WriteString(w, boolToString(viewlog.IsWechat))
-	case "platform":
-		io.WriteString(w, viewlog.Platform)
-	case "ip":
-		io.WriteString(w, viewlog.IP)
-	case "source":
-		io.WriteString(w, viewlog.Source)
-	default:
-		gifStr := "R0lGODlhAQABAID/AP///wAAACwAAAAAAQABAAACAkQBADs="
-		gifData, _ := base64.StdEncoding.DecodeString(gifStr)
+func handle(w http.ResponseWriter, r *http.Request) {
+	debug := r.URL.Query().Get("debug")
+	if debug == "" {
+		go yield(r)
+		go digest()
 		w.Header().Set("Content-Type", "image/gif")
 		w.Write(gifData)
+	} else {
+		viewlog := parseRequest(r)
+		switch debug {
+		case "mobile":
+			io.WriteString(w, boolToString(viewlog.IsMobile))
+		case "wechat":
+			io.WriteString(w, boolToString(viewlog.IsWechat))
+		case "platform":
+			io.WriteString(w, viewlog.Platform)
+		case "ip":
+			io.WriteString(w, viewlog.IP)
+		case "source":
+			io.WriteString(w, viewlog.Source)
+		default:
+			io.WriteString(w, "")
+		}
 	}
-
 }
 
 func init() {
