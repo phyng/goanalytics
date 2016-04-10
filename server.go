@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	tldlib "github.com/jpillora/go-tld"
 	"github.com/wangtuanjie/ip17mon"
@@ -17,6 +18,7 @@ import (
 
 // ViewLog core data structure
 type ViewLog struct {
+	Created         string `json:"created"`
 	URL             string `json:"url"`
 	Domain          string `json:"domain"`
 	UserAgent       string `json:"useragent"`
@@ -286,8 +288,7 @@ func getRootDomain(url string) string {
 }
 
 func yield(r *http.Request) {
-	viewlog := parseRequest(r)
-	LogChannel <- viewlog
+	LogChannel <- parseRequest(r)
 }
 
 func digest() {
@@ -308,8 +309,10 @@ func parseRequest(r *http.Request) ViewLog {
 	userAgent := []byte(r.Header.Get("User-Agent"))
 	query := r.URL.Query()
 	header := r.Header
+	created, _ := time.Time.MarshalText(time.Now())
 
 	viewlog := ViewLog{}
+	viewlog.Created = string(created)
 	viewlog.URL = url
 	viewlog.Domain = domain
 	viewlog.Referer = query.Get("referer")
