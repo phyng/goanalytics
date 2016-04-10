@@ -1,0 +1,26 @@
+{
+  "settings": {},
+  "mappings": {
+    "viewlog": {
+      "dynamic_templates": [{
+        "analyzed": {
+          "match": "analyzed_*",
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "string",
+            "analyzer": "standard"
+          }
+        }
+      }, {
+        "notanalyzed": {
+          "match": "*",
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "string",
+            "index": "not_analyzed"
+          }
+        }
+      }]
+    }
+  }
+}

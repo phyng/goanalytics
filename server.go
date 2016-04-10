@@ -14,6 +14,7 @@ import (
 
 	tldlib "github.com/jpillora/go-tld"
 	"github.com/wangtuanjie/ip17mon"
+	// "github.com/mattbaird/elastigo"
 )
 
 // ViewLog core data structure
