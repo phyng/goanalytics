@@ -60,7 +60,7 @@ func testSource(referer string, debug string, except string) {
 	testHeader(header, url, debug, except)
 }
 
-func main() {
+func test() {
 	testUserAgent("mobile", "mobile", "true")
 	testUserAgent("desktop", "mobile", "false")
 	testUserAgent("MicroMessenger", "wechat", "true")

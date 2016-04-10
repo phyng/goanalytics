@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/phyng/goanalytics/settings"
+
 	tldlib "github.com/jpillora/go-tld"
 	"github.com/wangtuanjie/ip17mon"
 	// "github.com/mattbaird/elastigo"
@@ -50,6 +52,9 @@ const buffLength = 10
 // LogChannel log channel
 var LogChannel = make(chan ViewLog, buffLength)
 var gifData, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAID/AP///wAAACwAAAAAAQABAAACAkQBADs=")
+
+// Settings settings
+var Settings = settings.LoadSettings()
 
 // 预编译正则表达式
 var (
@@ -367,6 +372,7 @@ func init() {
 }
 
 func main() {
+	fmt.Println(Settings)
 	http.HandleFunc("/", handle)
 	http.ListenAndServe(":"+os.Args[1], nil)
 }
