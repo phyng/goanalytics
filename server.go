@@ -372,7 +372,10 @@ func init() {
 }
 
 func main() {
-	fmt.Println(Settings)
+	if len(os.Args) < 2 {
+		panic("Pleace add [<host>]:<port> as first argument.")
+	}
 	http.HandleFunc("/", handle)
-	http.ListenAndServe(":"+os.Args[1], nil)
+	fmt.Printf("Start server on %s\n", os.Args[1])
+	http.ListenAndServe(os.Args[1], nil)
 }

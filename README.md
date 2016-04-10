@@ -12,10 +12,12 @@ make sure return `{"acknowledged":true}`
 
 ## Run
 ~~~bash
-go run server.go 8001
+export ENV_ELASTICSEARCH_HOST=localhost
+go run server.go :8001
 ~~~
 
 ## Test
 ~~~bash
-go run test.go 8001
+export ENV_TEST_SERVER=http://localhost:8001
+go test
 ~~~

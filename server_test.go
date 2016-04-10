@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var testServer = "http://localhost:8001"
+var testServer = Settings.TestServer
 
 func errorHandle(err error) {
 	if err != nil {
