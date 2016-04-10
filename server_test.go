@@ -4,8 +4,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
+	"testing"
 )
+
+var testServer = "http://localhost:8001"
 
 func errorHandle(err error) {
 	if err != nil {
@@ -39,7 +41,7 @@ func testUserAgent(UserAgent string, debug string, except string) {
 	header := map[string]string{
 		"User-Agent": UserAgent,
 	}
-	url := "http://localhost:" + os.Args[1] + "/?debug=" + debug
+	url := testServer + "/?debug=" + debug
 	testHeader(header, url, debug, except)
 }
 
@@ -47,7 +49,7 @@ func testXForwardedFor(XForwardedFor string, debug string, except string) {
 	header := map[string]string{
 		"X-Forwarded-For": XForwardedFor,
 	}
-	url := "http://localhost:" + os.Args[1] + "/?debug=" + debug
+	url := testServer + "/?debug=" + debug
 	testHeader(header, url, debug, except)
 }
 
@@ -56,11 +58,12 @@ func testSource(referer string, debug string, except string) {
 		"Host":    "www.localhost.com",
 		"Referer": "http://www.localhost.com",
 	}
-	url := "http://localhost:" + os.Args[1] + "/?referer=" + referer + "&debug=" + debug
+	url := testServer + "/?referer=" + referer + "&debug=" + debug
 	testHeader(header, url, debug, except)
 }
 
-func test() {
+// TestOld old tests
+func TestOld(*testing.T) {
 	testUserAgent("mobile", "mobile", "true")
 	testUserAgent("desktop", "mobile", "false")
 	testUserAgent("MicroMessenger", "wechat", "true")
