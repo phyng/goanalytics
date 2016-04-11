@@ -12,11 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/phyng/goanalytics/settings"
-
 	tldlib "github.com/jpillora/go-tld"
+	elastigo "github.com/mattbaird/elastigo/lib"
+	"github.com/phyng/goanalytics/settings"
 	"github.com/wangtuanjie/ip17mon"
-	// "github.com/mattbaird/elastigo"
 )
 
 // ViewLog core data structure
@@ -47,10 +46,8 @@ type ViewLog struct {
 	SourceKey       string `json:"sourcekey"`
 }
 
-const buffLength = 10
-
 // LogChannel log channel
-var LogChannel = make(chan ViewLog, buffLength)
+var LogChannel = make(chan ViewLog, Settings.BuffLength)
 var gifData, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAID/AP///wAAACwAAAAAAQABAAACAkQBADs=")
 
 // Settings settings
@@ -300,12 +297,19 @@ func yield(r *http.Request) {
 func digest() {
 	length := len(LogChannel)
 	fmt.Println(length)
-	if length == buffLength {
+	if length == Settings.BuffLength {
+		conn := elastigo.NewConn()
+		hosts := []string{Settings.ElasticSearchHost}
+		conn.SetHosts(hosts)
+		conn.SetPort(Settings.ElasticSearchPort)
+		indexer := conn.NewBulkIndexer(10)
+		indexer.Start()
 		for i := 0; i < length; i++ {
 			viewlog := <-LogChannel
 			jsonBody, _ := json.Marshal(viewlog)
-			fmt.Println(string(jsonBody))
+			indexer.Index(Settings.Index, Settings.DocType, "", "", "", nil, jsonBody)
 		}
+		indexer.Stop()
 	}
 }
 
