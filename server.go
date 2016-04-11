@@ -296,7 +296,6 @@ func yield(r *http.Request) {
 
 func digest() {
 	length := len(LogChannel)
-	fmt.Println(length)
 	if length == Settings.BuffLength {
 		conn := elastigo.NewConn()
 		hosts := []string{Settings.ElasticSearchHost}
@@ -380,6 +379,6 @@ func main() {
 		panic("Pleace add [<host>]:<port> as first argument.")
 	}
 	http.HandleFunc("/", handle)
-	fmt.Printf("Start server on %s\n", os.Args[1])
+	fmt.Printf("Start listen server on %s ...\n", os.Args[1])
 	http.ListenAndServe(os.Args[1], nil)
 }
