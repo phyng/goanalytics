@@ -21,3 +21,8 @@ go run server.go :8001
 export ENV_TEST_SERVER=http://localhost:8001
 go test
 ~~~
+
+## build
+~~~bash
+./build.sh
+~~~
