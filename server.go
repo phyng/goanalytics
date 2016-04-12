@@ -314,7 +314,6 @@ func digest() {
 
 func parseRequest(r *http.Request) ViewLog {
 	url := r.Header.Get("Referer")
-	domain := r.Host
 	userAgent := []byte(r.Header.Get("User-Agent"))
 	query := r.URL.Query()
 	header := r.Header
@@ -323,7 +322,7 @@ func parseRequest(r *http.Request) ViewLog {
 	viewlog := ViewLog{}
 	viewlog.Created = string(created)
 	viewlog.URL = url
-	viewlog.Domain = domain
+	viewlog.Domain = getRootDomain(url)
 	viewlog.Referer = query.Get("referer")
 	viewlog.Cookieid = query.Get("cookieid")
 	viewlog.Width = query.Get("width")
