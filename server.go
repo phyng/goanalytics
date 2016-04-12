@@ -329,7 +329,7 @@ func parseRequest(r *http.Request) ViewLog {
 	viewlog.Width = query.Get("width")
 	viewlog.Height = query.Get("height")
 	viewlog.Color = query.Get("color")
-	viewlog.Language = query.Get("language")
+	viewlog.Language = query.Get("lang")
 	viewlog.Title = query.Get("title")
 	viewlog.UserAgent = header.Get("User-Agent")
 	viewlog.IsMobile, viewlog.IsWechat = parseMobile(userAgent)

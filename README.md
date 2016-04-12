@@ -26,3 +26,9 @@ go test
 ~~~bash
 ./build.sh
 ~~~
+
+## deploy
+~~~bash
+cd html
+python -m SimpleHTTPServer 8002
+~~~
